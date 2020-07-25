@@ -1,114 +1,136 @@
 #include <stdio.h> // printf, scanf
-#include <stdlib.h> // system
+#include <stdlib.h> // system, srand, rand
+#include <string.h> // strcmp;
+#include <time.h> // time
 
-void numberSet(int, char*);
-void printField();
-
+typedef struct {
+    char number[9];
+    int afterPlayer,
+        beforePlayer,
+        move,
+        count;
+} FOR_GAME;
 /*
-playGame();
 typedef struct {
     char* name;
     int score;
 } PLAYER;
 */
+void randNumSet(FOR_GAME*);
+void playGame (FOR_GAME*);
+void swapNum (FOR_GAME*);
+int clearCheck(char*);
+void numberSet(int, char);
+void printField();
 
 int main() {
-    char* number[9] = {"１","２","３",
-                       "４","５","６",
-                       "７","８","　"};
-    int afterPlayer = 8;
-    int beforePlayer = 8;
-    int move;
+    FOR_GAME g = {"12345678 ", 8, 8, 0, 0};
+    
     system("clear");
     printField();
-    numberSet(9, "8:↑ 2:↓ 4:← 6:→");
+    randNumSet(&g);
+
     for (int i = 0; i < 9; i++) {
-            numberSet(i, number[i]);
+            numberSet(i, g.number[i]);
     }
-    while (1) {
-        numberSet(10, "");
-        scanf("%1d", &move);
-        switch (move) {
-            case 8:
-            //afterPlayerが0,1,2のとき一番上の行にいる
-                if(afterPlayer > 2) {
-                    beforePlayer = afterPlayer;
-                    afterPlayer -= 3;
-                    number[beforePlayer] = number[afterPlayer];
-                    number[afterPlayer] = "　";
-                    numberSet(afterPlayer, number[afterPlayer]);
-                    numberSet(beforePlayer, number[beforePlayer]);
-                }
-                break;
-            case 2:
-            //afterPlayerが6,7,8のとき一番下の行にいる
-                if(afterPlayer < 6 ) {
-                    beforePlayer = afterPlayer;
-                    afterPlayer += 3;
-                    number[beforePlayer] = number[afterPlayer];
-                    number[afterPlayer] = "　";
-                    numberSet(afterPlayer, number[afterPlayer]);
-                    numberSet(beforePlayer, number[beforePlayer]);
-                }
-                break;
-            case 4:
-            //afterPlayerが0,3,6のとき一番左の列にいる
-                if(afterPlayer % 3 != 0) {
-                    beforePlayer = afterPlayer;
-                    afterPlayer -= 1;
-                    number[beforePlayer] = number[afterPlayer];
-                    number[afterPlayer] = "　";
-                    numberSet(afterPlayer, number[afterPlayer]);
-                    numberSet(beforePlayer, number[beforePlayer]);
-                }
-                break;
-            case 6:
-            //afterPlayerが2,5,8のとき一番右の列にいる
-                if(afterPlayer % 3 != 2) {
-                    beforePlayer = afterPlayer;
-                    afterPlayer += 1;
-                    number[beforePlayer] = number[afterPlayer];
-                    number[afterPlayer] = "　";
-                    numberSet(afterPlayer, number[afterPlayer]);
-                    numberSet(beforePlayer, number[beforePlayer]);
-                }
-                break;
-        }
+
+    while (clearCheck(g.number)) {
+        numberSet(-1, ' ');
+        scanf("%1d", &g.move);
+        playGame(&g);
     }
+
+    numberSet(-1, ' ');
+
     return 0;
 }
 
-void numberSet(int i, char* number) {
-    switch (i) {
-        case 0:
-            printf("\033[2;3H%s", number);
-            break;
-        case 1:
-            printf("\033[2;7H%s", number);
+void randNumSet(FOR_GAME* g) {
+    srand(time(NULL));
+    for (int i = 0; i<1000; i++) {
+        // 2,4,6,8
+        g->move = 2 * ((rand() % 4) + 1);
+        playGame(g);
+    }
+    return;
+}
+
+void playGame(FOR_GAME* g) {
+    switch (g->move) {
+        case 8:
+        //g->afterPlayerが0,1,2のとき一番上の行にいる                
+            if(g->afterPlayer > 2) {
+                g->beforePlayer = g->afterPlayer;
+                g->afterPlayer -= 3;
+                swapNum(g);
+            }
             break;
         case 2:
-            printf("\033[2;11H%s", number);
-            break;
-        case 3:
-            printf("\033[4;3H%s", number);
+        //g->afterPlayerが6,7,8のとき一番下の行にいる                
+            if(g->afterPlayer < 6 ) {
+                g->beforePlayer = g->afterPlayer;
+                g->afterPlayer += 3;
+                swapNum(g);
+            }
             break;
         case 4:
-            printf("\033[4;7H%s", number);
-            break;
-        case 5:
-            printf("\033[4;11H%s", number);
+        //g->afterPlayerが0,3,6のとき一番左の列にいる                
+            if(g->afterPlayer % 3 != 0) {
+                g->beforePlayer = g->afterPlayer;
+                g->afterPlayer -= 1;
+                swapNum(g);
+            }
             break;
         case 6:
-            printf("\033[6;3H%s", number);
+        //g->afterPlayerが2,5,8のとき一番右の列にいる
+            if(g->afterPlayer % 3 != 2) {
+                g->beforePlayer = g->afterPlayer;
+                g->afterPlayer += 1;
+                swapNum(g);
+            }
+            break;
+    }
+}
+void swapNum(FOR_GAME* g) {
+    g->number[g->beforePlayer] = g->number[g->afterPlayer];
+    g->number[g->afterPlayer] = ' ';
+    numberSet(g->afterPlayer, g->number[g->afterPlayer]);
+    numberSet(g->beforePlayer, g->number[g->beforePlayer]);
+    return;
+}
+
+int clearCheck(char* number) {
+    return strcmp(number, "12345678 ");
+}
+
+void numberSet(int i, char number) {
+    switch (i) {
+        case 0:
+            printf("\033[2;3H%c", number);
+            break;
+        case 1:
+            printf("\033[2;7H%c", number);
+            break;
+        case 2:
+            printf("\033[2;11H%c", number);
+            break;
+        case 3:
+            printf("\033[4;3H%c", number);
+            break;
+        case 4:
+            printf("\033[4;7H%c", number);
+            break;
+        case 5:
+            printf("\033[4;11H%c", number);
+            break;
+        case 6:
+            printf("\033[6;3H%c", number);
             break;
         case 7:
-            printf("\033[6;7H%s", number);
+            printf("\033[6;7H%c", number);
             break;
         case 8:
-            printf("\033[6;11H%s", number);
-            break;
-        case 9:
-            printf("\033[9;0H%s", number);
+            printf("\033[6;11H%c", number);
             break;
         default:
             printf("\033[10;0H");
@@ -122,5 +144,6 @@ void printField() {
            "｜  ｜  ｜  ｜\n"
            "＋ー＋ー＋ー＋\n"
            "｜  ｜  ｜  ｜\n"
-           "＋ー＋ー＋ー＋\n");
+           "＋ー＋ー＋ー＋\n"
+           "\n8:↑　2:↓　4:←　6:→");
 }
