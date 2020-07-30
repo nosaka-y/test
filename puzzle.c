@@ -24,6 +24,7 @@ void playGame(FOR_GAME*);
 void swapNum(FOR_GAME*);
 int clearCheck(char*);
 void useFile(int*);
+void ranking(PLAYER*);
 void numberSet(int, char);
 void printField();
 
@@ -33,22 +34,19 @@ int main() {
     system("clear");
     printField();
     randNumSet(&g);
-  
     while (clearCheck(g.number)) {
         printf("\033[8;0Hcount:%d", g.count);
         numberSet(-1, ' ');
         inputMove(&g.move);
         playGame(&g);
     }
-
-    numberSet(-1, ' ');
     useFile(&g.count);
     return 0;
 }
 
 void randNumSet(FOR_GAME* g) {
     srand(time(NULL));
-    for (int i = 0; i < 10; i++) {
+    for (int i = 0; i < 1000; i++) {
         // 2,4,6,8
         g->move = 2 * ((rand() % 4) + 1);
         playGame(g);
@@ -61,7 +59,7 @@ void randNumSet(FOR_GAME* g) {
 }
 
 void inputMove(int *move) { 
-    while (scanf("%1d", move) == 0) {
+    while (scanf("%1d", move) != 1) {
         getchar();
     }
     return;
@@ -122,14 +120,8 @@ int clearCheck(char* number) {
 
 void useFile(int* count) {
     PLAYER p[5] = {};
-    char str[SIZE];
     FILE *fp;
-
-    system("clear");
-    system("clear");
-    printf("your score:%d\n", *count);
-    printf("your name:");
-
+    char str[SIZE];
     fp = fopen("database.csv", "r");
     if(fp != NULL) {
         for (int i= 0; i < 3; i++) {
@@ -140,27 +132,38 @@ void useFile(int* count) {
         }
         fclose(fp);
     }
-
-    scanf("%s", str);
-    p[3].name = (char*)malloc(sizeof(char) * (strlen(str) + 1));
-    if(p[3].name == NULL) exit(1);
-    strcpy(p[3].name, str);
     p[3].score = *count;
-
-    for (int i = 3; i > 0; i--) {
-        if (p[i].score <= p[i - 1].score) {
-            p[4] = p[i];
-            p[i] = p[i - 1];
-            p[i - 1] = p[4];
-        }
-    }
-
+    ranking(p);
     fp = fopen("database.csv", "w");
     if(fp != NULL) {
         for (int i= 0; i < 3; i++) {
             fprintf(fp, "%s %d\n", p[i].name, p[i].score);
         }
         fclose(fp);
+    }
+}
+void ranking(PLAYER* p) {
+    char str[SIZE];
+    system("clear");
+    printf("\033[0;0H");
+    printf("RANKING\n");
+    for (int i = 0; i < 3; i++) {
+        printf("%d:[%d] %s\n", i + 1, (p + i)->score, (p + i)->name);
+    }
+
+    printf("\nyour score:[%d]\n", (p + 3)->score);
+    printf("your name:");
+    scanf("%s", str);
+    (p + 3)->name = (char*)malloc(sizeof(char) * (strlen(str) + 1));
+    if((p + 3)->name == NULL) exit(1);
+    strcpy((p + 3)->name, str);
+
+    for (int i = 3; i > 0; i--) {
+        if ((p + i)->score <= (p + i - 1)->score) {
+            *(p + 4) = *(p + i);
+            *(p + i) = *(p + i - 1);
+            *(p + i - 1) = *(p + 4);
+        }
     }
 }
 
